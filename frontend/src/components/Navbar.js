@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../utils/AuthContext';
 
 const Navbar = () => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -31,6 +31,11 @@ const Navbar = () => {
                 <Button color="inherit" component={Link} to="/progress">
                   Progress
                 </Button>
+                {isAdmin && (
+                  <Button color="inherit" component={Link} to="/admin">
+                    Admin
+                  </Button>
+                )}
                 <Button color="inherit" onClick={handleLogout}>
                   Logout ({user?.username})
                 </Button>

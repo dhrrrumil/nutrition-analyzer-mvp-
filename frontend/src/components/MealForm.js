@@ -21,6 +21,14 @@ const MealForm = ({ onMealAdded, initialData = null }) => {
     setFormData({ ...formData, [name]: value });
   };
 
+  // Helper function to find a nutrient by name in the USDA response
+  const findNutrient = (nutrients, name) => {
+    const nutrient = nutrients.find(n => 
+      n.nutrientName && n.nutrientName.toLowerCase().includes(name.toLowerCase())
+    );
+    return nutrient ? parseFloat(nutrient.value) : 0;
+  };
+
   const analyzeFood = async (e) => {
     e.preventDefault();
     if (!formData.query.trim()) return;
@@ -32,22 +40,35 @@ const MealForm = ({ onMealAdded, initialData = null }) => {
       const response = await mealService.analyzeNutrition(formData.query);
       setAnalysisData(response.data);
       
-      // Convert Nutritionix data to our format
+      // Convert USDA API data to our format
       if (response.data.foods && response.data.foods.length > 0) {
-        const newItems = response.data.foods.map(food => ({
-          name: food.food_name,
-          calories: food.nf_calories,
-          protein: food.nf_protein,
-          carbs: food.nf_total_carbohydrate,
-          fat: food.nf_total_fat,
-          serving_size: `${food.serving_qty} ${food.serving_unit}`
-        }));
+        const newItems = response.data.foods.map(food => {
+          // Extract nutrients from USDA format
+          const nutrients = food.foodNutrients || [];
+          
+          // Find values for each nutrient
+          const calories = findNutrient(nutrients, 'energy') || findNutrient(nutrients, 'calorie');
+          const protein = findNutrient(nutrients, 'protein');
+          const carbs = findNutrient(nutrients, 'carbohydrate');
+          const fat = findNutrient(nutrients, 'fat');
+          
+          return {
+            name: food.description || formData.query,
+            calories: calories,
+            protein: protein,
+            carbs: carbs,
+            fat: fat,
+            serving_size: '100g' // Default serving size for USDA
+          };
+        });
         
         setFormData({
           ...formData,
           items: [...formData.items, ...newItems],
           query: ''
         });
+      } else {
+        setError('No foods found for your query.');
       }
     } catch (err) {
       setError('Failed to analyze nutrition data. Please try again.');

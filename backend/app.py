@@ -74,8 +74,16 @@ def login():
     user = users_col.find_one({'username': username})
     if not user or not check_password_hash(user['password'], password):
         return {'msg': 'Invalid credentials'}, 401
+    
+    # Include is_admin in the response if it exists
+    is_admin = user.get('is_admin', False)
+    
     access_token = create_access_token(identity=str(user['_id']))
-    return {'access_token': access_token, 'username': username}, 200
+    return {
+        'access_token': access_token, 
+        'username': username,
+        'is_admin': is_admin
+    }, 200
 
 # --- Meal Logging CRUD ---
 @app.route('/meals', methods=['POST'])
@@ -183,6 +191,81 @@ def get_recommendations():
     if not recs:
         recs.append('Great job! Keep up your healthy eating habits!')
     return {'recommendations': recs}, 200
+
+# Check if user is admin
+def is_admin(user_id):
+    user = users_col.find_one({'_id': ObjectId(user_id)})
+    return user and user.get('is_admin', False)
+
+# --- Admin Routes ---
+@app.route('/admin/stats', methods=['GET'])
+@jwt_required()
+def admin_stats():
+    user_id = get_jwt_identity()
+    if not is_admin(user_id):
+        return {'msg': 'Admin access required'}, 403
+        
+    # Get statistics
+    user_count = users_col.count_documents({})
+    meal_count = meals_col.count_documents({})
+    
+    # Count active users (users who logged meals in the last 7 days)
+    since = datetime.utcnow() - timedelta(days=7)
+    active_user_ids = set(meal['user_id'] for meal in meals_col.find({'created_at': {'$gte': since}}))
+    active_users = len(active_user_ids)
+    
+    return {
+        'user_count': user_count,
+        'meal_count': meal_count,
+        'active_users': active_users
+    }, 200
+
+@app.route('/admin/users', methods=['GET'])
+@jwt_required()
+def admin_get_users():
+    user_id = get_jwt_identity()
+    if not is_admin(user_id):
+        return {'msg': 'Admin access required'}, 403
+        
+    users = list(users_col.find({}, {'password': 0}))  # Exclude passwords
+    for user in users:
+        user['_id'] = str(user['_id'])
+    
+    return jsonify(users)
+
+@app.route('/admin/users/<user_id>', methods=['DELETE'])
+@jwt_required()
+def admin_delete_user(user_id):
+    admin_id = get_jwt_identity()
+    if not is_admin(admin_id):
+        return {'msg': 'Admin access required'}, 403
+    
+    # Don't allow admins to delete themselves
+    if user_id == admin_id:
+        return {'msg': 'Cannot delete your own admin account'}, 400
+        
+    # Delete user
+    result = users_col.delete_one({'_id': ObjectId(user_id)})
+    if result.deleted_count == 0:
+        return {'msg': 'User not found'}, 404
+        
+    # Delete all meals associated with the user
+    meals_col.delete_many({'user_id': user_id})
+    
+    return {'msg': 'User and all associated data deleted'}, 200
+
+@app.route('/admin/users/<user_id>/meals', methods=['GET'])
+@jwt_required()
+def admin_get_user_meals(user_id):
+    admin_id = get_jwt_identity()
+    if not is_admin(admin_id):
+        return {'msg': 'Admin access required'}, 403
+        
+    meals = list(meals_col.find({'user_id': user_id}))
+    for meal in meals:
+        meal['_id'] = str(meal['_id'])
+    
+    return jsonify(meals)
 
 if __name__ == '__main__':
     app.run(debug=True)

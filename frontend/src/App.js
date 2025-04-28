@@ -9,6 +9,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Meals from './pages/Meals';
 import Progress from './pages/Progress';
+import AdminDashboard from './pages/AdminDashboard';
 
 // Create custom theme
 const theme = createTheme({
@@ -40,6 +41,25 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+// Admin route component
+const AdminRoute = ({ children }) => {
+  const { isAuthenticated, isAdmin, loading } = useAuth();
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/dashboard" />;
+  }
+
+  return children;
+};
+
 function App() {
   return (
     <ThemeProvider theme={theme}>
@@ -55,6 +75,11 @@ function App() {
               <ProtectedRoute>
                 <Dashboard />
               </ProtectedRoute>
+            } />
+            <Route path="/admin" element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
             } />
             <Route path="/meals" element={
               <ProtectedRoute>

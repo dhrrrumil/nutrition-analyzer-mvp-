@@ -11,9 +11,10 @@ export const AuthProvider = ({ children }) => {
     // Check if user is logged in on initial load
     const token = localStorage.getItem('token');
     const username = localStorage.getItem('username');
+    const isAdmin = localStorage.getItem('isAdmin') === 'true';
     
     if (token && username) {
-      setUser({ username });
+      setUser({ username, isAdmin });
     }
     
     setLoading(false);
@@ -22,12 +23,13 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     try {
       const response = await authService.login(username, password);
-      const { access_token, username: user } = response.data;
+      const { access_token, username: user, is_admin } = response.data;
       
       localStorage.setItem('token', access_token);
       localStorage.setItem('username', user);
+      localStorage.setItem('isAdmin', is_admin);
       
-      setUser({ username: user });
+      setUser({ username: user, isAdmin: is_admin });
       return { success: true };
     } catch (error) {
       return { 
@@ -50,7 +52,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    authService.logout();
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    localStorage.removeItem('isAdmin');
     setUser(null);
   };
 
@@ -60,7 +64,8 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
+    isAdmin: user?.isAdmin || false
   };
 
   return (

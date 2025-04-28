@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Typography, Box, Alert, CircularProgress, Button } from '@mui/material';
-import { userService } from '../services/api';
+import { progressService } from '../services/api';
 import ProgressDisplay from '../components/ProgressDisplay';
 import RefreshIcon from '@mui/icons-material/Refresh';
 
@@ -16,8 +16,8 @@ const Progress = () => {
     
     try {
       const [progressResponse, recommendationsResponse] = await Promise.all([
-        userService.getProgress(),
-        userService.getRecommendations()
+        progressService.getProgress(),
+        progressService.getRecommendations()
       ]);
       
       setProgressData(progressResponse.data);

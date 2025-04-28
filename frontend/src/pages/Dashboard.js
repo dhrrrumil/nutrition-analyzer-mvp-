@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, Box, Button, Paper, CircularProgress } from '@mui/material';
+import { Container, Typography, Box, Button, Paper, CircularProgress, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../utils/AuthContext';
-import { mealService, userService } from '../services/api';
+import { mealService, progressService } from '../services/api';
 import MealList from '../components/MealList';
 import ProgressDisplay from '../components/ProgressDisplay';
 
@@ -24,8 +24,8 @@ const Dashboard = () => {
       // Fetch all data in parallel
       const [mealsResponse, progressResponse, recommendationsResponse] = await Promise.all([
         mealService.getMeals(),
-        userService.getProgress(),
-        userService.getRecommendations()
+        progressService.getProgress(),
+        progressService.getRecommendations()
       ]);
       
       setMeals(mealsResponse.data);
