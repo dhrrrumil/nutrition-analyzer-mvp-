@@ -7,6 +7,10 @@ import os
 import requests
 from bson import ObjectId
 from datetime import datetime, timedelta
+import base64
+import io
+from PIL import Image
+import json
 
 # Try to load environment variables from .env file
 try:
@@ -266,6 +270,112 @@ def admin_get_user_meals(user_id):
         meal['_id'] = str(meal['_id'])
     
     return jsonify(meals)
+
+# --- Food Image Recognition ---
+@app.route('/recognize-food', methods=['POST'])
+@jwt_required()
+def recognize_food():
+    data = request.get_json()
+    image_data = data.get('image')
+    
+    if not image_data:
+        return {'msg': 'Image data required'}, 400
+        
+    try:
+        # Remove the data:image/jpeg;base64, prefix if present
+        if ',' in image_data:
+            image_data = image_data.split(',')[1]
+            
+        # We'll use the Clarifai API for food recognition
+        CLARIFAI_API_KEY = os.environ.get('CLARIFAI_API_KEY', 'YOUR_CLARIFAI_API_KEY')
+        CLARIFAI_URL = "https://api.clarifai.com/v2/models/food-item-recognition/outputs"
+        
+        # Prepare the request to Clarifai
+        headers = {
+            'Authorization': f'Key {CLARIFAI_API_KEY}',
+            'Content-Type': 'application/json'
+        }
+        
+        clarifai_data = {
+            "inputs": [
+                {
+                    "data": {
+                        "image": {
+                            "base64": image_data
+                        }
+                    }
+                }
+            ]
+        }
+        
+        # Call the Clarifai API
+        response = requests.post(CLARIFAI_URL, headers=headers, json=clarifai_data)
+        
+        if response.status_code != 200:
+            return {'msg': 'Food recognition API error'}, 500
+            
+        # Process the response to get the top food predictions
+        predictions = response.json()
+        concepts = predictions['outputs'][0]['data']['concepts']
+        
+        # Get the top 3 food predictions
+        top_foods = []
+        for concept in concepts[:3]:
+            food_name = concept['name']
+            confidence = concept['value']
+            
+            # Only include predictions with at least 50% confidence
+            if confidence > 0.5:
+                top_foods.append({
+                    'name': food_name,
+                    'confidence': round(confidence * 100, 1)  # Convert to percentage
+                })
+        
+        # If we don't have any confident predictions, return an error
+        if not top_foods:
+            return {'msg': 'Could not confidently identify any food in the image'}, 400
+            
+        # Return the top food predictions
+        return {'foods': top_foods}, 200
+        
+    except Exception as e:
+        print(f"Error in food recognition: {str(e)}")
+        return {'msg': 'Error processing the image'}, 500
+
+# --- Get Nutrition for Recognized Food ---
+@app.route('/nutrition-by-name', methods=['POST'])
+@jwt_required()
+def get_nutrition_by_name():
+    data = request.get_json()
+    food_name = data.get('food_name')
+    quantity = data.get('quantity', '1')
+    
+    if not food_name:
+        return {'msg': 'Food name required'}, 400
+        
+    try:
+        # Use the food name to search in the USDA database
+        query = f"{quantity} {food_name}"
+        
+        # Use the existing nutrition endpoint logic
+        url = 'https://api.nal.usda.gov/fdc/v1/foods/search'
+        params = {
+            'api_key': USDA_API_KEY,
+            'query': query,
+            'pageSize': 1
+        }
+        
+        response = requests.get(url, params=params)
+        
+        if response.status_code != 200:
+            return {'msg': 'USDA API error'}, 500
+            
+        # Return the nutrition data
+        return response.json(), 200
+        
+    except Exception as e:
+        print(f"Error getting nutrition data: {str(e)}")
+        return {'msg': 'Error processing the nutrition request'}, 500
 
 if __name__ == '__main__':
     app.run(debug=True)

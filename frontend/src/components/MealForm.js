@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { TextField, Button, Grid, FormControl, InputLabel, Select, MenuItem, Box, Typography, Alert } from '@mui/material';
+import { TextField, Button, Grid, FormControl, InputLabel, Select, MenuItem, Box, Typography, Alert, Tabs, Tab } from '@mui/material';
 import { mealService } from '../services/api';
+import FoodImageRecognition from './FoodImageRecognition';
 
 const MealForm = ({ onMealAdded, initialData = null }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [analysisData, setAnalysisData] = useState(null);
+  const [activeTab, setActiveTab] = useState(0);
   
   const [formData, setFormData] = useState({
     name: initialData?.name || '',
@@ -19,6 +21,10 @@ const MealForm = ({ onMealAdded, initialData = null }) => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
   };
 
   // Helper function to find a nutrient by name in the USDA response
@@ -125,6 +131,14 @@ const MealForm = ({ onMealAdded, initialData = null }) => {
     }
   };
 
+  const handleAddFoodFromImage = (foodItem) => {
+    setFormData({
+      ...formData,
+      items: [...formData.items, foodItem]
+    });
+    setActiveTab(0); // Switch back to the text input tab
+  };
+
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -174,34 +188,45 @@ const MealForm = ({ onMealAdded, initialData = null }) => {
       </Grid>
       
       <Box sx={{ mt: 3, border: '1px solid #eee', p: 2, borderRadius: 1 }}>
-        <Typography variant="h6" gutterBottom>
-          Add Food Items
-        </Typography>
+        <Tabs value={activeTab} onChange={handleTabChange} sx={{ mb: 2 }}>
+          <Tab label="Text Entry" />
+          <Tab label="Image Recognition" />
+        </Tabs>
         
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={8}>
-            <TextField
-              fullWidth
-              label="Describe food (e.g., '1 apple, 200g chicken breast')"
-              name="query"
-              value={formData.query}
-              onChange={handleInputChange}
-              placeholder="Enter food items to analyze"
-            />
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Button 
-              onClick={analyzeFood}
-              variant="contained" 
-              color="primary"
-              disabled={loading || !formData.query.trim()}
-              fullWidth
-              sx={{ height: '100%' }}
-            >
-              {loading ? 'Analyzing...' : 'Analyze Food'}
-            </Button>
-          </Grid>
-        </Grid>
+        {activeTab === 0 ? (
+          <>
+            <Typography variant="h6" gutterBottom>
+              Add Food Items
+            </Typography>
+            
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={8}>
+                <TextField
+                  fullWidth
+                  label="Describe food (e.g., '1 apple, 200g chicken breast')"
+                  name="query"
+                  value={formData.query}
+                  onChange={handleInputChange}
+                  placeholder="Enter food items to analyze"
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <Button 
+                  onClick={analyzeFood}
+                  variant="contained" 
+                  color="primary"
+                  disabled={loading || !formData.query.trim()}
+                  fullWidth
+                  sx={{ height: '100%' }}
+                >
+                  {loading ? 'Analyzing...' : 'Analyze Food'}
+                </Button>
+              </Grid>
+            </Grid>
+          </>
+        ) : (
+          <FoodImageRecognition onAddFood={handleAddFoodFromImage} />
+        )}
         
         {formData.items.length > 0 && (
           <Box sx={{ mt: 3 }}>

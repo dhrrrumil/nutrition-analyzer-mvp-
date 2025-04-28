@@ -73,4 +73,14 @@ export const adminService = {
   }
 };
 
+// Food Recognition services
+export const foodRecognitionService = {
+  recognizeFood: (imageData) => {
+    return api.post('/recognize-food', { image: imageData });
+  },
+  getNutritionByName: (foodName, quantity = '1') => {
+    return api.post('/nutrition-by-name', { food_name: foodName, quantity });
+  }
+};
+
 export default api; 
