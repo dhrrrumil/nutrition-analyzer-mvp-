@@ -17,13 +17,28 @@ except ImportError:
     pass
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}}, support_credentials=True)
+# Updated CORS configuration
+CORS(app, 
+     resources={r"/*": {"origins": "*"}}, 
+     supports_credentials=True,
+     allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Credentials"],
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+
+# Add CORS headers to all responses
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+    return response
 
 # Config
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'super-secret-key')  # Change this in production
 MONGO_URI = os.environ.get('MONGO_URI', 'mongodb://localhost:27017/nutrition_db')
 NUTRITIONIX_APP_ID = os.environ.get('NUTRITIONIX_APP_ID', 'demo_app_id')
 NUTRITIONIX_API_KEY = os.environ.get('NUTRITIONIX_API_KEY', 'demo_api_key')
+USDA_API_KEY = os.environ.get('USDA_API_KEY', 'RYTQjMiUg92TJwbLw1nRaxFJTp07gwYX8HvMgWNr')
+print('USDA_API_KEY:', USDA_API_KEY)
 
 # MongoDB setup
 client = MongoClient(MONGO_URI)
@@ -117,15 +132,16 @@ def analyze_nutrition():
     query = data.get('query')
     if not query:
         return {'msg': 'Query required'}, 400
-    url = 'https://trackapi.nutritionix.com/v2/natural/nutrients'
-    headers = {
-        'x-app-id': NUTRITIONIX_APP_ID,
-        'x-app-key': NUTRITIONIX_API_KEY,
-        'Content-Type': 'application/json'
+    # Use USDA FoodData Central API
+    url = 'https://api.nal.usda.gov/fdc/v1/foods/search'
+    params = {
+        'api_key': USDA_API_KEY,
+        'query': query,
+        'pageSize': 1
     }
-    response = requests.post(url, headers=headers, json={'query': query})
+    response = requests.get(url, params=params)
     if response.status_code != 200:
-        return {'msg': 'Nutritionix API error'}, 500
+        return {'msg': 'USDA API error'}, 500
     return response.json(), 200
 
 # --- Progress Tracking ---

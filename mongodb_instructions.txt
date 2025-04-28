@@ -1,0 +1,30 @@
+# MongoDB Setup Instructions
+
+## Option 1: Install MongoDB Locally
+
+1. Download and install MongoDB Community Edition from: https://www.mongodb.com/try/download/community
+2. During installation, choose to install MongoDB as a service
+3. After installation, the MongoDB service should start automatically
+4. Test if MongoDB is running by connecting to it using MongoDB Compass or using the MongoDB shell
+
+## Option 2: Use MongoDB Atlas (Cloud MongoDB)
+
+1. Create a free account at MongoDB Atlas: https://www.mongodb.com/cloud/atlas/register
+2. Create a new cluster (the free tier is sufficient)
+3. Set up database access (create a username and password)
+4. Add your IP address to the IP whitelist (or use 0.0.0.0/0 to allow connections from anywhere)
+5. Get your connection string by clicking "Connect" > "Connect your application"
+6. Update your backend/.env file with the connection string:
+
+```
+JWT_SECRET_KEY=your_secret_key_here
+MONGO_URI=mongodb+srv://<username>:<password>@<clustername>.mongodb.net/nutrition_db?retryWrites=true&w=majority
+NUTRITIONIX_APP_ID=your_app_id
+NUTRITIONIX_API_KEY=your_api_key
+```
+
+Replace <username>, <password>, and <clustername> with your actual values.
+
+## Verifying MongoDB Connection
+
+After setting up MongoDB (either locally or with Atlas), restart your Flask app and try registering again. 
