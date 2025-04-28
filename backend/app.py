@@ -8,11 +8,19 @@ import requests
 from bson import ObjectId
 from datetime import datetime, timedelta
 
+# Try to load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # If python-dotenv is not installed, continue without it
+    pass
+
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}}, support_credentials=True)
 
 # Config
-app.config['JWT_SECRET_KEY'] = 'super-secret-key'  # Change this in production
+app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'super-secret-key')  # Change this in production
 MONGO_URI = os.environ.get('MONGO_URI', 'mongodb://localhost:27017/nutrition_db')
 NUTRITIONIX_APP_ID = os.environ.get('NUTRITIONIX_APP_ID', 'demo_app_id')
 NUTRITIONIX_API_KEY = os.environ.get('NUTRITIONIX_API_KEY', 'demo_api_key')
