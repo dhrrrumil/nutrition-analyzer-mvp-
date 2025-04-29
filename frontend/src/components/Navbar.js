@@ -2,7 +2,6 @@ import React from 'react';
 import { AppBar, Box, Toolbar, Typography, Button, Container } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../utils/AuthContext';
-import logoSmall from '../assets/images/logo-small.svg';
 
 const Navbar = () => {
   const { user, isAuthenticated, logout, isAdmin } = useAuth();
@@ -17,16 +16,9 @@ const Navbar = () => {
     <AppBar position="static">
       <Container maxWidth="lg">
         <Toolbar>
-          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-            <img 
-              src={logoSmall} 
-              alt="Nutrition Analyzer Logo" 
-              style={{ height: '24px', marginRight: '6px' }} 
-            />
-            <Typography variant="h6" component={Link} to="/" sx={{ textDecoration: 'none', color: 'white' }}>
-              Nutrition Analyzer
-            </Typography>
-          </Box>
+          <Typography variant="h6" component={Link} to="/" sx={{ flexGrow: 1, textDecoration: 'none', color: 'white' }}>
+            Nutrition Analyzer
+          </Typography>
           <Box>
             {isAuthenticated ? (
               <>
