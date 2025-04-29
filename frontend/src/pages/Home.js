@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Typography, Button, Container, Grid, Paper, Card, CardContent, CardMedia } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../utils/AuthContext';
+import logoImage from '../assets/images/logo.svg';
 
 const Home = () => {
   const { isAuthenticated } = useAuth();
@@ -27,12 +28,23 @@ const Home = () => {
         <Container maxWidth="lg">
           <Grid container spacing={4} alignItems="center">
             <Grid item xs={12} md={6}>
-              <Typography variant="h2" component="h1" gutterBottom>
-                Track Your Nutrition
-              </Typography>
-              <Typography variant="h5" paragraph>
-                Easily log your meals and monitor your nutritional intake
-              </Typography>
+              {/* Logo and Title */}
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  mb: 3
+                }}
+              >
+                <img 
+                  src={logoImage} 
+                  alt="Nutrition Analyzer Logo" 
+                  style={{ maxWidth: '100%', height: 'auto', marginBottom: '16px' }} 
+                />
+              </Box>
+              
+              {/* Call to action buttons */}
               <Box sx={{ mt: 4 }}>
                 <Button 
                   variant="contained" 
