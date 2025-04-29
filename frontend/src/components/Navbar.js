@@ -21,7 +21,7 @@ const Navbar = () => {
             <img 
               src={logoSmall} 
               alt="Nutrition Analyzer Logo" 
-              style={{ height: '32px', marginRight: '8px' }} 
+              style={{ height: '24px', marginRight: '6px' }} 
             />
             <Typography variant="h6" component={Link} to="/" sx={{ textDecoration: 'none', color: 'white' }}>
               Nutrition Analyzer

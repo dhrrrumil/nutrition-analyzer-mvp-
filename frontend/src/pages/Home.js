@@ -41,7 +41,7 @@ const Home = () => {
                   src={logoImage} 
                   alt="Nutrition Analyzer Logo" 
                   style={{ 
-                    maxWidth: '85%', 
+                    maxWidth: '70%', 
                     height: 'auto', 
                     marginBottom: '16px' 
                   }} 
