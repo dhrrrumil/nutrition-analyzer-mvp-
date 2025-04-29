@@ -40,7 +40,11 @@ const Home = () => {
                 <img 
                   src={logoImage} 
                   alt="Nutrition Analyzer Logo" 
-                  style={{ maxWidth: '100%', height: 'auto', marginBottom: '16px' }} 
+                  style={{ 
+                    maxWidth: '85%', 
+                    height: 'auto', 
+                    marginBottom: '16px' 
+                  }} 
                 />
               </Box>
               
