@@ -6,11 +6,23 @@ from pymongo import MongoClient
 import os
 import requests
 from bson import ObjectId
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import base64
 import io
 from PIL import Image
 import json
+
+_BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
+try:
+    with open(os.path.join(_BACKEND_DIR, '..', 'VERSION'), encoding='utf-8') as _vf:
+        APP_VERSION = _vf.read().strip()
+except OSError:
+    APP_VERSION = '1.0.0'
+
+
+def utc_now():
+    return datetime.now(timezone.utc)
+
 
 # Try to load environment variables from .env file
 try:
@@ -55,7 +67,7 @@ jwt = JWTManager(app)
 
 @app.route('/')
 def health_check():
-    return {'status': 'ok'}, 200
+    return {'status': 'ok', 'version': APP_VERSION}, 200
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -67,7 +79,11 @@ def register():
     if users_col.find_one({'username': username}):
         return {'msg': 'Username already exists'}, 409
     hashed_pw = generate_password_hash(password)
-    users_col.insert_one({'username': username, 'password': hashed_pw})
+    users_col.insert_one({
+        'username': username,
+        'password': hashed_pw,
+        'created_at': utc_now(),
+    })
     return {'msg': 'User registered successfully'}, 201
 
 @app.route('/login', methods=['POST'])
@@ -89,6 +105,25 @@ def login():
         'is_admin': is_admin
     }, 200
 
+@app.route('/profile', methods=['GET'])
+@jwt_required()
+def get_profile():
+    user_id = get_jwt_identity()
+    user = users_col.find_one({'_id': ObjectId(user_id)})
+    if not user:
+        return {'msg': 'User not found'}, 404
+    meals_count = meals_col.count_documents({'user_id': user_id})
+    created = user.get('created_at')
+    created_iso = None
+    if created is not None:
+        created_iso = created.isoformat() if hasattr(created, 'isoformat') else str(created)
+    return {
+        'username': user['username'],
+        'is_admin': user.get('is_admin', False),
+        'created_at': created_iso,
+        'meals_logged': meals_count,
+    }, 200
+
 # --- Meal Logging CRUD ---
 @app.route('/meals', methods=['POST'])
 @jwt_required()
@@ -100,8 +135,8 @@ def add_meal():
         'name': data.get('name'),
         'items': data.get('items', []),  # list of food items
         'meal_type': data.get('meal_type', 'other'),
-        'date': data.get('date', datetime.utcnow().isoformat()),
-        'created_at': datetime.utcnow()
+        'date': data.get('date', utc_now().isoformat()),
+        'created_at': utc_now()
     }
     result = meals_col.insert_one(meal)
     meal['_id'] = str(result.inserted_id)
@@ -162,7 +197,7 @@ def analyze_nutrition():
 def get_progress():
     user_id = get_jwt_identity()
     # Get meals for the last 7 days
-    since = datetime.utcnow() - timedelta(days=7)
+    since = utc_now() - timedelta(days=7)
     meals = list(meals_col.find({'user_id': user_id, 'created_at': {'$gte': since}}))
     # Aggregate calories and macros
     total_calories = 0
@@ -181,13 +216,13 @@ def get_progress():
 def get_recommendations():
     user_id = get_jwt_identity()
     # Example: If user logs <2 meals/day, recommend more frequent logging
-    today = datetime.utcnow().date()
+    today = utc_now().date()
     meals_today = meals_col.count_documents({'user_id': user_id, 'date': {'$regex': str(today)}})
     recs = []
     if meals_today < 2:
         recs.append('Try to log all your meals for better tracking!')
     # Example: If protein < 50g in last 7 days, recommend more protein
-    since = datetime.utcnow() - timedelta(days=7)
+    since = utc_now() - timedelta(days=7)
     meals = list(meals_col.find({'user_id': user_id, 'created_at': {'$gte': since}}))
     total_protein = sum(item.get('protein', 0) for meal in meals for item in meal.get('items', []))
     if total_protein < 350:  # 50g/day * 7
@@ -214,7 +249,7 @@ def admin_stats():
     meal_count = meals_col.count_documents({})
     
     # Count active users (users who logged meals in the last 7 days)
-    since = datetime.utcnow() - timedelta(days=7)
+    since = utc_now() - timedelta(days=7)
     active_user_ids = set(meal['user_id'] for meal in meals_col.find({'created_at': {'$gte': since}}))
     active_users = len(active_user_ids)
     

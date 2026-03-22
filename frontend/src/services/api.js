@@ -26,6 +26,9 @@ export const authService = {
   register: (username, password) => {
     return api.post('/register', { username, password });
   },
+  getProfile: () => {
+    return api.get('/profile');
+  },
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('username');

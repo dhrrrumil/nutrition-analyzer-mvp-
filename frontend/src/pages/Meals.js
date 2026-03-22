@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, Box, Button, CircularProgress, Alert, Paper, Tabs, Tab } from '@mui/material';
+import { Container, Typography, Box, CircularProgress, Alert, Paper, Tabs, Tab } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { mealService } from '../services/api';
 import MealList from '../components/MealList';
 import MealForm from '../components/MealForm';
+import PageBanner from '../components/PageBanner';
+import { SITE_IMAGES } from '../constants/siteImages';
 
 const Meals = () => {
   const [loading, setLoading] = useState(true);
@@ -54,20 +56,32 @@ const Meals = () => {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ mt: 4, mb: 2 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Meal Tracker
-        </Typography>
-        <Typography variant="body1" color="text.secondary" gutterBottom>
-          Log and manage your meals to track nutrition
-        </Typography>
+      <Box sx={{ mt: 3, mb: 2 }}>
+        <PageBanner
+          title="Meal Tracker"
+          subtitle="Log and manage your meals to keep your nutrition on track."
+          imageSrc={SITE_IMAGES.mealsHeader}
+        />
       </Box>
 
-      <Paper sx={{ borderRadius: 1 }}>
-        <Tabs 
-          value={activeTab} 
+      <Paper
+        elevation={0}
+        sx={{
+          borderRadius: 3,
+          overflow: 'hidden',
+          border: '1px solid',
+          borderColor: 'divider',
+          boxShadow: '0 4px 20px rgba(8, 28, 21, 0.06)',
+        }}
+      >
+        <Tabs
+          value={activeTab}
           onChange={handleTabChange}
           variant="fullWidth"
+          sx={{
+            bgcolor: 'background.paper',
+            '& .MuiTab-root': { py: 2 },
+          }}
         >
           <Tab label="View Meals" />
           <Tab label="Add Meal" />
@@ -91,7 +105,7 @@ const Meals = () => {
           </>
         ) : (
           <Box sx={{ mt: 2 }}>
-            <Typography variant="h5" gutterBottom>
+            <Typography variant="h5" gutterBottom sx={{ fontWeight: 700 }}>
               Add New Meal
             </Typography>
             <MealForm onMealAdded={handleMealAdded} />

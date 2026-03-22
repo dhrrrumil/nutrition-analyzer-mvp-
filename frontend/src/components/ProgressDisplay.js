@@ -28,11 +28,20 @@ const ProgressDisplay = ({ progressData, recommendations }) => {
   const fatPercentage = calculatePercentage(macros.fat, targetFat * 7);
 
   return (
-    <Box sx={{ mt: 3 }}>
+    <Box sx={{ mt: 1 }}>
       <Grid container spacing={3}>
         <Grid item xs={12} md={8}>
-          <Paper elevation={1} sx={{ p: 3 }}>
-            <Typography variant="h5" gutterBottom>
+          <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 2.5, sm: 3 },
+              borderRadius: 3,
+              border: '1px solid',
+              borderColor: 'divider',
+              boxShadow: '0 8px 28px rgba(8, 28, 21, 0.06)',
+            }}
+          >
+            <Typography variant="h5" gutterBottom sx={{ fontWeight: 700 }}>
               Past 7 Days Summary
             </Typography>
             <Typography variant="body2" color="text.secondary" gutterBottom>
@@ -135,9 +144,9 @@ const ProgressDisplay = ({ progressData, recommendations }) => {
         </Grid>
         
         <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
+          <Card sx={{ borderRadius: 3 }}>
+            <CardContent sx={{ p: 2.5 }}>
+              <Typography variant="h6" gutterBottom sx={{ fontWeight: 700 }}>
                 Recommendations
               </Typography>
               <Divider sx={{ mb: 2 }} />

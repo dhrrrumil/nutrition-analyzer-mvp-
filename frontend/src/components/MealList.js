@@ -73,8 +73,13 @@ const MealList = ({ meals, onMealUpdated }) => {
         <Grid container spacing={2}>
           {meals.map((meal) => (
             <Grid item xs={12} md={6} key={meal._id}>
-              <Card variant="outlined">
-                <CardContent>
+              <Card
+                sx={{
+                  transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+                  '&:hover': { boxShadow: '0 12px 32px rgba(8, 28, 21, 0.1)' },
+                }}
+              >
+                <CardContent sx={{ p: 2.5 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
                     <Typography variant="h6" component="div">
                       {meal.name}
@@ -126,7 +131,16 @@ const MealList = ({ meals, onMealUpdated }) => {
               </Card>
               
               {deleteConfirmationId === meal._id && (
-                <Box sx={{ mt: 1, p: 2, bgcolor: '#ffebee', borderRadius: 1 }}>
+                <Box
+                  sx={{
+                    mt: 1,
+                    p: 2,
+                    bgcolor: 'rgba(211, 47, 47, 0.08)',
+                    borderRadius: 2,
+                    border: '1px solid',
+                    borderColor: 'rgba(211, 47, 47, 0.25)',
+                  }}
+                >
                   <Typography variant="body2" gutterBottom>
                     Are you sure you want to delete this meal?
                   </Typography>

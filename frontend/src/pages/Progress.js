@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, Box, Alert, CircularProgress, Button } from '@mui/material';
+import { Container, Box, Alert, CircularProgress, Button } from '@mui/material';
 import { progressService } from '../services/api';
 import ProgressDisplay from '../components/ProgressDisplay';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import PageBanner from '../components/PageBanner';
+import { SITE_IMAGES } from '../constants/siteImages';
 
 const Progress = () => {
   const [loading, setLoading] = useState(true);
@@ -36,24 +38,35 @@ const Progress = () => {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ mt: 4, mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Box>
-          <Typography variant="h4" component="h1" gutterBottom>
-            Nutrition Progress
-          </Typography>
-          <Typography variant="body1" color="text.secondary" gutterBottom>
-            Track your nutrition progress over time
-          </Typography>
+      <Box sx={{ mt: 3, mb: 2 }}>
+        <Box sx={{ position: 'relative' }}>
+          <PageBanner
+            title="Nutrition Progress"
+            subtitle="See how your habits trend over time and act on personalized recommendations."
+            imageSrc={SITE_IMAGES.progressHeader}
+          />
+          <Button
+            variant="contained"
+            color="secondary"
+            startIcon={<RefreshIcon />}
+            onClick={fetchData}
+            disabled={loading}
+            sx={{
+              position: 'absolute',
+              top: 16,
+              right: 16,
+              zIndex: 2,
+              display: { xs: 'none', sm: 'inline-flex' },
+            }}
+          >
+            Refresh
+          </Button>
         </Box>
-        
-        <Button 
-          variant="outlined" 
-          startIcon={<RefreshIcon />}
-          onClick={fetchData}
-          disabled={loading}
-        >
-          Refresh
-        </Button>
+        <Box sx={{ display: { xs: 'flex', sm: 'none' }, justifyContent: 'flex-end', mb: 1 }}>
+          <Button variant="outlined" startIcon={<RefreshIcon />} onClick={fetchData} disabled={loading} size="small">
+            Refresh
+          </Button>
+        </Box>
       </Box>
 
       {loading ? (
