@@ -1,1 +1,2 @@
-def test_always_passes():\n    assert True
+def test_always_passes():
+    assert True
